@@ -11,35 +11,54 @@ app.use(logger("dev"));
 
 const PORT = process.env.PORT || 3000;
 
-mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost/dbExample", { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true });
+mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost/dbWorkout", { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true });
 
 app.use(express.static("public"));
 
 // API ROUTES
-// POST
+// POST == post new workout plan
 app.post("/api/workouts", (req, res) => {
-    const newWorkout = new Workout(req.body); 
+    const newWorkout = new Workout(req.body);
     newWorkout.save(newWorkout)
-    .then(data => {
-        console.log(data)
-        res.send(data);
-    });
+        .then(data => {
+            console.log(data)
+            res.send(data);
+        });
 })
 
-// PUT
+// PUT == updates workouts by id
 app.put("/api/workouts/:id", (req, res) => {
     let updates = req.body
 
     Workout.findOneAndUpdate({
         _id: req.params.id
-    }, updates, {new: true} )
-    .then(updatedWorkout => res.json(updatedWorkout))
+    }, updates, { new: true })
+        .then(updatedWorkout => res.json(updatedWorkout))
 })
 
-// GET api/workout
+// GET api/workout/range (Last 7 days: Thing limit(7))
 app.get("/api/workouts/range", (req, res) => {
+    // db.workouts.find({}).limit(7).sort({"day": -1})
+    // .then((data) => {
+    //     res.send(data);
+    //     console.log(data)
+    // })
 
-})
+    let {startDay, endDay} = req.query;
+
+    db.workouts.find({
+        day: {
+            $gte: new Day(new Day(startDay).setHours(00,00,00)),
+            $lt: new Day(new Day(endDay).setHours(23,59,59))
+        }
+    }).limit(7)
+    .sort({day:'ascending'})
+    .then((data) => {
+        res.send(data);
+        console.log(data);
+    })
+    
+});
 
 
 // HTML ROUTES
