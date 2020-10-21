@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const path = require("path");
 const logger = require("morgan");
-const { db } = require("./models/workout");
+// const { db } = require("./models/workout");
 const { Workout } = require("./models");
 
 const app = express();
@@ -16,15 +16,27 @@ mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost/dbWorkout", { u
 app.use(express.static("public"));
 
 // API ROUTES
+// GET == get all workouts
+app.get("/api/workouts", (req, res) => {
+    Workout.find()
+        .then(data => {
+            res.json(data);
+        })
+        .catch(err => {
+            res.json(err)
+        })
+});
+
 // POST == post new workout plan
 app.post("/api/workouts", (req, res) => {
-    const newWorkout = new Workout(req.body);
-    newWorkout.save(newWorkout)
+    Workout.create({})
         .then(data => {
-            console.log(data)
-            res.send(data);
-        });
-})
+            res.json(data)
+        })
+        .catch(err => {
+            res.json(err)
+        })
+});
 
 // PUT == updates workouts by id
 app.put("/api/workouts/:id", (req, res) => {
@@ -32,8 +44,13 @@ app.put("/api/workouts/:id", (req, res) => {
 
     Workout.findOneAndUpdate({
         _id: req.params.id
-    }, updates, { new: true })
+    }, { $push: { execrises: updates } },
+        { new: true }
+    )
         .then(updatedWorkout => res.json(updatedWorkout))
+        .catch(err => {
+            res.json(err);
+        })
 })
 
 // GET api/workout/range (Last 7 days: Thing limit(7))
@@ -44,20 +61,20 @@ app.get("/api/workouts/range", (req, res) => {
     //     console.log(data)
     // })
 
-    let {startDay, endDay} = req.query;
+    let { startDay, endDay } = req.query;
 
-    db.workouts.find({
+    Workout.find({
         day: {
-            $gte: new Day(new Day(startDay).setHours(00,00,00)),
-            $lt: new Day(new Day(endDay).setHours(23,59,59))
+            $gte: new Day(new Day(startDay).setHours(00, 00, 00)),
+            $lt: new Day(new Day(endDay).setHours(23, 59, 59))
         }
     }).limit(7)
-    .sort({day:'ascending'})
-    .then((data) => {
-        res.send(data);
-        console.log(data);
-    })
-    
+        .sort({ day: 'ascending' })
+        .then((data) => {
+            res.send(data);
+            console.log(data);
+        })
+
 });
 
 
