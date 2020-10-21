@@ -11,16 +11,33 @@ app.use(logger("dev"));
 
 const PORT = process.env.PORT || 3000;
 
-mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost/dbWorkout", { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true });
+mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost/workout", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true,
+});
 
+//Sets up the Express app to handle data parsing
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(express.static("public"));
 
-// API ROUTES
-// GET == get all workouts
+// ========= API ROUTES ============= //
+// GET == get workouts
 app.get("/api/workouts", (req, res) => {
     Workout.find()
-        .then(data => {
-            res.json(data);
+        .then(workoutData => {
+            workoutData.forEach(workout => {
+                var totalWeight = 0;
+                var totalDuration = 0;
+                workout.exercises.forEach(target => {
+                    totalWeight += target.weight;
+                    totalDuration += target.duration;
+                });
+                workout.totalWeight = totalWeight;
+                workout.totalDuration = totalDuration;
+            });
+            res.json(workoutData);
         })
         .catch(err => {
             res.json(err)
@@ -29,9 +46,11 @@ app.get("/api/workouts", (req, res) => {
 
 // POST == post new workout plan
 app.post("/api/workouts", (req, res) => {
-    Workout.create({})
-        .then(data => {
-            res.json(data)
+    const newWorkout = req.body;
+
+    Workout.create({ newWorkout })
+        .then(newWorkoutData => {
+            res.json(newWorkoutData)
         })
         .catch(err => {
             res.json(err)
@@ -44,41 +63,33 @@ app.put("/api/workouts/:id", (req, res) => {
 
     Workout.findOneAndUpdate({
         _id: req.params.id
-    }, { $push: { execrises: updates } },
+    }, {
+        $inc: {
+            totalWeight: req.body.weight,
+            totalDuration: req.body.duration
+        },
+        $push: { exercises: updates }
+    },
         { new: true }
-    )
-        .then(updatedWorkout => res.json(updatedWorkout))
-        .catch(err => {
-            res.json(err);
-        })
+    ).then(updatedWorkout => {
+        res.json(updatedWorkout)
+    }).catch(err => {
+        res.json(err);
+    })
 })
 
 // GET api/workout/range (Last 7 days: Thing limit(7))
 app.get("/api/workouts/range", (req, res) => {
-    // db.workouts.find({}).limit(7).sort({"day": -1})
-    // .then((data) => {
-    //     res.send(data);
-    //     console.log(data)
-    // })
-
-    let { startDay, endDay } = req.query;
-
-    Workout.find({
-        day: {
-            $gte: new Day(new Day(startDay).setHours(00, 00, 00)),
-            $lt: new Day(new Day(endDay).setHours(23, 59, 59))
-        }
-    }).limit(7)
+    Workout.find({}).limit(7)
         .sort({ day: 'ascending' })
         .then((data) => {
             res.send(data);
             console.log(data);
         })
-
 });
 
 
-// HTML ROUTES
+// ========= HTML ROUTES ============= //
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public/index.html"));
 });
