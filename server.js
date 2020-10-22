@@ -111,7 +111,6 @@ app.get("/stats", (req, res) => {
     res.sendFile(path.join(__dirname, "public/stats.html"));
 });
 
-
 // Listen on port 3000
 app.listen(PORT, () => {
     console.log(`App running on http://localhost:${PORT}`);
