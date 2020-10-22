@@ -44,18 +44,33 @@ function populateChart(data) {
   let pie = document.querySelector("#canvas3").getContext("2d");
   let pie2 = document.querySelector("#canvas4").getContext("2d");
 
+  function setLabels(data) {
+    let days = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+  
+    const labels = [];
+  
+    for (let i=0; i<data.length; i++){
+      let dayNum = new Date(data[i].day).getDay();
+      labels.push(`${days[dayNum]}`);
+    }
+      return labels
+    }
+  
+    let dayLabels = setLabels(data);
+  
+
   let lineChart = new Chart(line, {
     type: "line",
     data: {
-      labels: [
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday"
-      ],
+      labels: dayLabels,
       datasets: [
         {
           label: "Workout Duration In Minutes",
@@ -91,28 +106,6 @@ function populateChart(data) {
       }
     }
   });
-
-  function setLabels(data) {
-  let days = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-  ];
-
-  const labels = [];
-
-  for (let i=0; i<data.length; i++){
-    let dayNum = new Date(data[i].day).getDay();
-    labels.push(`${days[dayNum]}`);
-  }
-    return labels
-  }
-
-  let dayLabels = setLabels(data);
 
 
   let barChart = new Chart(bar, {

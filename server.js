@@ -28,18 +28,18 @@ app.use(express.static("public"));
 // ========= API ROUTES ============= //
 // GET == get workouts
 app.get("/api/workouts", (req, res) => {
-    Workout.find()
+    Workout.find({})
         .then(workoutData => {
-            workoutData.forEach(workout => {
-                var totalWeight = 0;
-                var totalDuration = 0;
-                workout.exercises.forEach(target => {
-                    totalWeight += target.weight;
-                    totalDuration += target.duration;
-                });
-                workout.totalWeight = totalWeight;
-                workout.totalDuration = totalDuration;
-            });
+            workoutData.forEach(target => {
+                var duration = 0;
+                var weight = 0;
+                target.exercises.forEach(data => {
+                    duration += data.duration;
+                    weight += data.weight;
+                })
+                target.totalDuration = duration;
+                target.totalWeight = weight
+            })
             res.json(workoutData);
         })
         .catch(err => {
@@ -48,10 +48,8 @@ app.get("/api/workouts", (req, res) => {
 });
 
 // POST == post new workout plan
-app.post("/api/workouts", (req, res) => {
-    const newWorkout = req.body;
-
-    Workout.create({ newWorkout })
+app.post("/api/workouts", ({ body }, res) => {
+    Workout.create(body)
         .then(newWorkoutData => {
             res.json(newWorkoutData)
         })
@@ -62,24 +60,14 @@ app.post("/api/workouts", (req, res) => {
 
 // PUT == updates workouts by id
 app.put("/api/workouts/:id", (req, res) => {
-
-    Workout.findOneAndUpdate({
+    var exerciseData = req.body
+    Workout.findByIdAndUpdate({
         _id: req.params.id
     }, {
         $push: {
-            exercises: {
-                type: req.body.type,
-                name: req.body.name,
-                reps: req.body.reps,
-                sets: req.body.sets,
-            }
+            exercises: exerciseData 
         },
-        $inc: {
-            totalWeight: req.body.weight,
-            totalDuration: req.body.duration
-        }
-    },
-        { new: true }
+    }, { new: true }
     ).then(updatedWorkout => {
         res.json(updatedWorkout)
     }).catch(err => {
@@ -89,11 +77,12 @@ app.put("/api/workouts/:id", (req, res) => {
 
 // GET api/workout/range (Last 7 days: Thing limit(7))
 app.get("/api/workouts/range", (req, res) => {
-    Workout.find({}).limit(7)
+    Workout.find()
+        .limit(7)
         .sort({ day: 'ascending' })
         .then((data) => {
             res.send(data);
-            console.log(data);
+            // console.log(data);
         })
 });
 

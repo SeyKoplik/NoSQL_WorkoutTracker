@@ -8,6 +8,7 @@ Workout tracker app allows user to view, create, and track daily workouts. User 
 A mongo database is created to keep track of all the results using mongoose schema and html and api routes are handled using expressjs.
 
 ## Screenshot Previews
+<img src="./public/assets/NoSQL_hw.gif" width="50%">
 
 <img src="./public/assets/trackerss.png" width="50%">
 
