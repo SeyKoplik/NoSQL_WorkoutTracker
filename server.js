@@ -62,16 +62,22 @@ app.post("/api/workouts", (req, res) => {
 
 // PUT == updates workouts by id
 app.put("/api/workouts/:id", (req, res) => {
-    let updates = req.body
 
     Workout.findOneAndUpdate({
         _id: req.params.id
     }, {
+        $push: {
+            exercises: {
+                type: req.body.type,
+                name: req.body.name,
+                reps: req.body.reps,
+                sets: req.body.sets,
+            }
+        },
         $inc: {
             totalWeight: req.body.weight,
             totalDuration: req.body.duration
-        },
-        $push: { exercises: updates }
+        }
     },
         { new: true }
     ).then(updatedWorkout => {
@@ -107,6 +113,6 @@ app.get("/stats", (req, res) => {
 
 
 // Listen on port 3000
-app.listen(3000, () => {
+app.listen(PORT, () => {
     console.log(`App running on http://localhost:${PORT}`);
 });
